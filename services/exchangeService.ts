@@ -39,7 +39,7 @@ export const getPortfolioBalance = async (): Promise<Portfolio> => {
     console.log(`[Exchange] Fetching balance from ${exchangeId}...`);
     try {
         // This must be configured on your backend.
-        if (apiKey === 'YOUR_API_KEY_HERE' || secret === 'YOUR_SECRET_KEY_HERE') {
+        if (apiKey === 'cb02568b-126f-4204-b52c-51b390f7b4dd' || secret === '655DC0F12C463F23C8A5C0C384C8DE1B') {
             console.warn("[Exchange] Using placeholder API keys. Returning a mock portfolio.");
             return { eur: 10000.00, btc: 0.5 };
         }
