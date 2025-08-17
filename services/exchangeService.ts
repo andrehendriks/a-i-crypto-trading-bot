@@ -14,7 +14,7 @@ import ccxt from 'ccxt';
 // e.g., const apiKey = process.env.EXCHANGE_API_KEY;
 const apiKey = 'cb02568b-126f-4204-b52c-51b390f7b4dd'; // <-- REPLACE on your server
 const secret = '655DC0F12C463F23C8A5C0C384C8DE1B'; // <-- REPLACE on your server
-const exchangeId = 'binance'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
+const exchangeId = 'OKX'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
 const symbol = 'BTC/EUR';
 // --- End Configuration ---
 
