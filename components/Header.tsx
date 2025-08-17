@@ -1,11 +1,4 @@
 import React from 'react';
-import { TradingMode } from '../types';
-
-interface HeaderProps {
-  isConnected: boolean;
-  onDisconnect: () => void;
-  tradingMode: TradingMode;
-}
 
 const ChipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,7 +13,7 @@ const ChipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 
-const Header: React.FC<HeaderProps> = ({ isConnected, onDisconnect, tradingMode }) => {
+const Header: React.FC = () => {
   return (
     <header className="bg-gray-900/50 backdrop-blur-sm border-b border-cyan-400/20 p-4 flex justify-between items-center sticky top-0 z-50">
       <div className="flex items-center gap-3">
@@ -28,34 +21,7 @@ const Header: React.FC<HeaderProps> = ({ isConnected, onDisconnect, tradingMode 
         <h1 className="text-2xl font-bold text-gray-100 tracking-wider">
           AI CRYPTO TRADING BOT
         </h1>
-        {isConnected && (
-            <div className={`flex items-center gap-2 text-sm font-bold px-3 py-1 rounded-full border
-              ${tradingMode === 'live' 
-                ? 'bg-red-500/20 border-red-500 text-red-400' 
-                : 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
-              }`}
-            >
-                <span className="relative flex h-3 w-3">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 
-                      ${tradingMode === 'live' ? 'bg-red-400' : 'bg-cyan-400'}`
-                    }></span>
-                    <span className={`relative inline-flex rounded-full h-3 w-3 
-                      ${tradingMode === 'live' ? 'bg-red-500' : 'bg-cyan-500'}`
-                    }></span>
-                </span>
-                {tradingMode.toUpperCase()}
-            </div>
-        )}
       </div>
-      {isConnected && (
-        <button
-          onClick={onDisconnect}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-          Disconnect
-        </button>
-      )}
     </header>
   );
 };

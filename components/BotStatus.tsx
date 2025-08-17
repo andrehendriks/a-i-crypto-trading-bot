@@ -4,9 +4,10 @@ interface BotStatusProps {
   isRunning: boolean;
   onToggle: (isRunning: boolean) => void;
   isAnalyzing: boolean;
+  statusMessage: string;
 }
 
-const BotStatus: React.FC<BotStatusProps> = ({ isRunning, onToggle, isAnalyzing }) => {
+const BotStatus: React.FC<BotStatusProps> = ({ isRunning, onToggle, isAnalyzing, statusMessage }) => {
   return (
     <div className="bg-gray-800/50 border border-cyan-400/20 rounded-xl p-6 shadow-lg">
       <div className="flex justify-between items-center">
@@ -15,7 +16,7 @@ const BotStatus: React.FC<BotStatusProps> = ({ isRunning, onToggle, isAnalyzing 
           <div className="flex items-center gap-2 mt-2">
             <span className={`h-3 w-3 rounded-full ${isRunning ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`}></span>
             <span className={`text-lg font-semibold ${isRunning ? 'text-green-400' : 'text-red-500'}`}>
-              {isRunning ? (isAnalyzing ? 'Analyzing...' : 'Enabled') : 'Disabled'}
+              {statusMessage}
             </span>
           </div>
         </div>
@@ -36,7 +37,7 @@ const BotStatus: React.FC<BotStatusProps> = ({ isRunning, onToggle, isAnalyzing 
         </div>
       </div>
         <p className="text-sm text-gray-400 mt-4">
-          When enabled, the bot will automatically analyze market data and execute trades based on AI signals.
+          Toggle to start or stop the trading bot on the server. The bot will run autonomously when enabled.
         </p>
     </div>
   );

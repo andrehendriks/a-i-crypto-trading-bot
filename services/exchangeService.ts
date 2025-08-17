@@ -1,97 +1,120 @@
+import { Portfolio, Trade } from '../types';
+import ccxt from 'ccxt';
 
-import { Portfolio, TradingMode, Trade } from '../types';
+// ##################################################################
+// #  CRITICAL SECURITY WARNING                                     #
+// ##################################################################
+// #  THIS CODE IS DESIGNED TO RUN ON A SECURE BACKEND SERVER ONLY. #
+// #  NEVER, EVER RUN THIS CODE OR STORE API KEYS IN A BROWSER.     #
+// #  DOING SO WILL EXPOSE YOUR KEYS AND LEAD TO FINANCIAL LOSS.    #
+// ##################################################################
+
+// --- Configuration ---
+// In a real backend, these would be loaded from environment variables or a secret manager.
+// e.g., const apiKey = process.env.EXCHANGE_API_KEY;
+const apiKey = 'YOUR_API_KEY_HERE'; // <-- REPLACE on your server
+const secret = 'YOUR_SECRET_KEY_HERE'; // <-- REPLACE on your server
+const exchangeId = 'binance'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
+const symbol = 'BTC/EUR';
+// --- End Configuration ---
+
+const exchange = new (ccxt as any)[exchangeId]({
+    apiKey: apiKey,
+    secret: secret,
+    // Enable sandbox mode if the exchange supports it, for safe testing.
+    // 'options': { 'defaultType': 'future' or 'sandboxMode': true }
+});
 
 /**
- * NOTE: This service interacts with browser localStorage to create a persistent
- * portfolio for demonstration purposes. It does NOT connect to a real exchange.
- * For production systems, logic handling funds and API keys must reside on a secure backend server.
- */
-
-// Helper functions for localStorage
-const savePortfolio = async (portfolio: Portfolio, mode: TradingMode): Promise<void> => {
-    localStorage.setItem(`trading_bot_portfolio_${mode}`, JSON.stringify(portfolio));
-};
-
-const loadPortfolio = async (mode: TradingMode): Promise<Portfolio | null> => {
-    const saved = localStorage.getItem(`trading_bot_portfolio_${mode}`);
-    return saved ? JSON.parse(saved) : null;
-};
-
-export const saveTradeHistory = async (trades: Trade[], mode: TradingMode): Promise<void> => {
-    localStorage.setItem(`trading_bot_history_${mode}`, JSON.stringify(trades));
-};
-
-export const loadTradeHistory = async (mode: TradingMode): Promise<Trade[]> => {
-    const saved = localStorage.getItem(`trading_bot_history_${mode}`);
-    return saved ? JSON.parse(saved) : [];
-}
-
-/**
- * Fetches the current portfolio balance.
- * @param mode - The current trading mode ('demo' or 'live').
+ * Fetches the current portfolio balance from the exchange.
  * @returns A promise that resolves to the user's portfolio.
  */
-export const getPortfolioBalance = async (mode: TradingMode): Promise<Portfolio> => {
-  const existingPortfolio = await loadPortfolio(mode);
-  if (existingPortfolio) {
-    return existingPortfolio;
-  }
-  
-  // Return a default starting portfolio if none is saved
-  const defaultPortfolio = mode === 'demo' 
-    ? { eur: 100000.00, btc: 1.0 }
-    : { eur: 10000.00, btc: 0.5 };
-  
-  await savePortfolio(defaultPortfolio, mode);
-  return defaultPortfolio;
+export const getPortfolioBalance = async (): Promise<Portfolio> => {
+    console.log(`[Exchange] Fetching balance from ${exchangeId}...`);
+    try {
+        // This must be configured on your backend.
+        if (apiKey === 'YOUR_API_KEY_HERE' || secret === 'YOUR_SECRET_KEY_HERE') {
+            console.warn("[Exchange] Using placeholder API keys. Returning a mock portfolio.");
+            return { eur: 10000.00, btc: 0.5 };
+        }
+        const balance = await exchange.fetchBalance();
+        return {
+            eur: balance.free['EUR'] || 0,
+            btc: balance.free['BTC'] || 0,
+        };
+    } catch (error) {
+        console.error(`[Exchange] Error fetching balance:`, error);
+        throw new Error(`Could not fetch balance from ${exchangeId}. Check server logs.`);
+    }
 };
 
 /**
- * Places a market buy order.
+ * Places a market buy order on the exchange.
  * @param amountEur - The amount in EUR to spend.
- * @param price - The current price of BTC.
- * @param mode - The current trading mode ('demo' or 'live').
  * @returns A promise that resolves to the trade result.
  */
-export const placeBuyOrder = async (amountEur: number, price: number, mode: TradingMode): Promise<{ success: boolean; btcAmount: number; }> => {
-  const btcAmount = amountEur / price;
-  console.log(`%c[${mode.toUpperCase()}]: Placing MARKET BUY order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #22c55e');
-  
-  const currentPortfolio = await getPortfolioBalance(mode);
-  if (currentPortfolio.eur >= amountEur) {
-    const newPortfolio = {
-      eur: currentPortfolio.eur - amountEur,
-      btc: currentPortfolio.btc + btcAmount,
-    };
-    await savePortfolio(newPortfolio, mode);
-    return { success: true, btcAmount };
-  }
-  
-  console.error(`[${mode.toUpperCase()}]: INSUFFICIENT FUNDS to place BUY order.`);
-  return { success: false, btcAmount: 0 };
+export const placeBuyOrder = async (amountEur: number): Promise<{ success: boolean; btcAmount: number; price: number }> => {
+    try {
+        const price = (await exchange.fetchTicker(symbol)).last;
+        if (!price) throw new Error("Could not fetch current price.");
+
+        const btcAmount = amountEur / price;
+        console.log(`%c[Exchange] Placing MARKET BUY for ${btcAmount.toFixed(6)} BTC at ~€${price}`, 'color: #22c55e');
+
+        // For real trading, uncomment the next line.
+        // const order = await exchange.createMarketBuyOrder(symbol, btcAmount);
+        // console.log('[Exchange] Market buy order placed:', order);
+
+        // For this demo, we'll just log it.
+        if (apiKey === 'YOUR_API_KEY_HERE') {
+             console.warn("[Exchange] DEMO: Real order not placed. Update API keys on your server.");
+        }
+
+        return { success: true, btcAmount, price };
+    } catch (error) {
+        console.error(`[Exchange] Error placing BUY order:`, error);
+        return { success: false, btcAmount: 0, price: 0 };
+    }
 };
 
 /**
- * Places a market sell order.
- * @param amountEur - The amount in EUR to sell.
- * @param price - The current price of BTC.
- * @param mode - The current trading mode ('demo' or 'live').
+ * Places a market sell order on the exchange.
+ * @param amountBtc - The amount in BTC to sell.
  * @returns A promise that resolves to the trade result.
  */
-export const placeSellOrder = async (amountEur: number, price: number, mode: TradingMode): Promise<{ success: boolean; btcAmount: number; }> => {
-  const btcAmount = amountEur / price;
-  console.log(`%c[${mode.toUpperCase()}]: Placing MARKET SELL order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #ef4444');
+export const placeSellOrder = async (amountEur: number): Promise<{ success:boolean; btcAmount: number; price: number }> => {
+    try {
+        const price = (await exchange.fetchTicker(symbol)).last;
+        if (!price) throw new Error("Could not fetch current price.");
 
-  const currentPortfolio = await getPortfolioBalance(mode);
-  if (currentPortfolio.btc >= btcAmount) {
-     const newPortfolio = {
-      eur: currentPortfolio.eur + amountEur,
-      btc: currentPortfolio.btc - btcAmount,
-    };
-    await savePortfolio(newPortfolio, mode);
-    return { success: true, btcAmount };
-  }
-  
-  console.error(`[${mode.toUpperCase()}]: INSUFFICIENT FUNDS to place SELL order.`);
-  return { success: false, btcAmount: 0 };
+        const btcAmount = amountEur / price;
+        console.log(`%c[Exchange] Placing MARKET SELL for ${btcAmount.toFixed(6)} BTC at ~€${price}`, 'color: #ef4444');
+
+        // For real trading, uncomment the next line.
+        // const order = await exchange.createMarketSellOrder(symbol, btcAmount);
+        // console.log('[Exchange] Market sell order placed:', order);
+        
+        // For this demo, we'll just log it.
+        if (apiKey === 'YOUR_API_KEY_HERE') {
+            console.warn("[Exchange] DEMO: Real order not placed. Update API keys on your server.");
+        }
+
+        return { success: true, btcAmount, price };
+    } catch (error) {
+        console.error(`[Exchange] Error placing SELL order:`, error);
+        return { success: false, btcAmount: 0, price: 0 };
+    }
 };
+
+/**
+ * In a real backend, you would use a database to persist trade history.
+ * For this simulation, we'll use localStorage to keep it simple.
+ */
+export const saveTradeHistory = async (trades: Trade[]): Promise<void> => {
+    localStorage.setItem(`trading_bot_history_real`, JSON.stringify(trades));
+};
+
+export const loadTradeHistory = async (): Promise<Trade[]> => {
+    const saved = localStorage.getItem(`trading_bot_history_real`);
+    return saved ? JSON.parse(saved) : [];
+}

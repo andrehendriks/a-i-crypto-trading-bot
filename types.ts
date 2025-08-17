@@ -29,3 +29,9 @@ export interface Portfolio {
 }
 
 export type TradingMode = 'demo' | 'live';
+
+export interface BotStatus {
+    isRunning: boolean;
+    isAnalyzing: boolean;
+    statusMessage: string;
+}

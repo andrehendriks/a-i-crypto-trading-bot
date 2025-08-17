@@ -1,10 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 import { CryptoDataPoint, AiInsight as AiInsightType, TradingSignal } from '../types';
-import { getTradingInsight } from '../services/geminiService';
 
 interface AiInsightProps {
   cryptoData: CryptoDataPoint[];
-  apiKey: string;
   lastAutoInsight: AiInsightType | null;
 }
 
@@ -22,31 +20,8 @@ const SignalIcon: React.FC<{ signal: TradingSignal }> = ({ signal }) => {
     }
 };
 
-const AiInsight: React.FC<AiInsightProps> = ({ cryptoData, apiKey, lastAutoInsight }) => {
-  const [manualInsight, setManualInsight] = useState<AiInsightType | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const insight = manualInsight || lastAutoInsight;
-
-  const fetchInsight = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setManualInsight(null);
-    try {
-      const result = await getTradingInsight(cryptoData, apiKey);
-      setManualInsight(result);
-    } catch (e) {
-      setError('Failed to get insight from AI. Please try again.');
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [cryptoData, apiKey]);
-
-  useEffect(() => {
-    setManualInsight(null);
-  }, [lastAutoInsight]);
+const AiInsight: React.FC<AiInsightProps> = ({ lastAutoInsight }) => {
+  const insight = lastAutoInsight;
 
   const getSignalClasses = (signal: TradingSignal | undefined) => {
     switch(signal) {
@@ -58,15 +33,15 @@ const AiInsight: React.FC<AiInsightProps> = ({ cryptoData, apiKey, lastAutoInsig
   };
   
   const signalText = insight?.signal || 'Awaiting Signal';
-  const reasoningText = insight?.reasoning || 'Enable auto-trading or click "Analyze Now" to get the latest AI-powered trading signal.';
+  const reasoningText = insight?.reasoning || 'Start the bot to receive real-time AI-powered trading signals from the server.';
 
 
   return (
     <div className="bg-gray-800/50 border border-cyan-400/20 rounded-xl p-6 shadow-lg space-y-4">
        <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-100">AI Trading Analysis</h3>
-        {insight && !manualInsight && !loading && (
-            <span className="text-xs text-cyan-400/70 uppercase font-mono">From Auto-Trader</span>
+        {insight && (
+            <span className="text-xs text-cyan-400/70 uppercase font-mono">From Trading Bot</span>
         )}
       </div>
       
@@ -81,25 +56,11 @@ const AiInsight: React.FC<AiInsightProps> = ({ cryptoData, apiKey, lastAutoInsig
       </div>
 
       <div className="bg-gray-900/50 p-4 rounded-lg min-h-[120px]">
-        {loading && <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div></div>}
-        {error && <p className="text-red-400 text-center">{error}</p>}
-        {!loading && !error && <p className="text-gray-300">{reasoningText}</p>}
+        <p className="text-gray-300">{reasoningText}</p>
       </div>
-
-      <button
-        onClick={fetchInsight}
-        disabled={loading}
-        className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:transform-none flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
-            <span>Analyzing...</span>
-          </>
-        ) : (
-          'Analyze Now'
-        )}
-      </button>
+       <p className="text-xs text-center text-gray-500">
+        AI analysis is performed automatically by the backend bot.
+      </p>
     </div>
   );
 };
