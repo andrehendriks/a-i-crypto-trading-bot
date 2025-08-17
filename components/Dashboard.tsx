@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import PriceChart from './PriceChart';
 import AiInsight from './AiInsight';
@@ -7,7 +8,8 @@ import TradeHistory from './TradeHistory';
 import useCryptoData from '../hooks/useCryptoData';
 import { Portfolio as PortfolioType, Trade, AiInsight as AiInsightType, TradingSignal, TradingMode } from '../types';
 import { getTradingInsight } from '../services/geminiService';
-import { getPortfolioBalance, placeBuyOrder, placeSellOrder } from '../services/exchangeService';
+import { getPortfolioBalance, placeBuyOrder, placeSellOrder, loadTradeHistory, saveTradeHistory } from '../services/exchangeService';
+import LiveModeWarning from './LiveModeWarning';
 
 interface DashboardProps {
     apiKey: string;
@@ -25,49 +27,48 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, tradingMode }) => {
   const [lastAutoInsight, setLastAutoInsight] = useState<AiInsightType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
-  // Fetch initial portfolio balance when component mounts
+  // Fetch initial portfolio and history when component mounts
   useEffect(() => {
-    const fetchBalance = async () => {
-        // In a real app, you would pass apiSecret securely, likely from a backend
-        const initialPortfolio = await getPortfolioBalance(apiKey, 'dummy-secret', tradingMode);
+    const fetchInitialData = async () => {
+        const initialPortfolio = await getPortfolioBalance(tradingMode);
         setPortfolio(initialPortfolio);
+        const initialHistory = await loadTradeHistory(tradingMode);
+        setTradeHistory(initialHistory);
     };
-    fetchBalance();
-  }, [apiKey, tradingMode]);
+    fetchInitialData();
+  }, [tradingMode]);
 
   const executeTrade = useCallback(async (signal: TradingSignal.BUY | TradingSignal.SELL, price: number) => {
     let tradeResult: { success: boolean; btcAmount: number; } | null = null;
+    const currentPortfolio = await getPortfolioBalance(tradingMode);
     
-    if (signal === TradingSignal.BUY && portfolio.eur >= TRADE_AMOUNT_EUR) {
-        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price, tradingMode);
-        if(tradeResult.success) {
-            setPortfolio(p => ({ eur: p.eur - TRADE_AMOUNT_EUR, btc: p.btc + tradeResult.btcAmount }));
-        }
+    if (signal === TradingSignal.BUY && currentPortfolio.eur >= TRADE_AMOUNT_EUR) {
+        tradeResult = await placeBuyOrder(TRADE_AMOUNT_EUR, price, tradingMode);
     } else if (signal === TradingSignal.SELL) {
         const btcToSell = TRADE_AMOUNT_EUR / price;
-        if (portfolio.btc >= btcToSell) {
-            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price, tradingMode);
-            if(tradeResult.success) {
-                setPortfolio(p => ({ eur: p.eur + TRADE_AMOUNT_EUR, btc: p.btc - tradeResult.btcAmount }));
-            }
+        if (currentPortfolio.btc >= btcToSell) {
+            tradeResult = await placeSellOrder(TRADE_AMOUNT_EUR, price, tradingMode);
         }
     }
 
     if (tradeResult?.success) {
-         // Add trade to history
-        setTradeHistory(prevHistory => [
-          { 
+        const newPortfolio = await getPortfolioBalance(tradingMode);
+        setPortfolio(newPortfolio);
+
+        const newTrade: Trade = { 
             id: new Date().toISOString(), 
             type: signal, 
             price, 
             amountBtc: tradeResult.btcAmount,
             time: new Date().toLocaleTimeString() 
-          },
-          ...prevHistory
-        ].slice(0, 50)); // Keep history to 50 trades
+        };
+
+        const updatedHistory = [newTrade, ...tradeHistory].slice(0, 50);
+        setTradeHistory(updatedHistory);
+        await saveTradeHistory(updatedHistory, tradingMode);
     }
 
-  }, [apiKey, portfolio, tradingMode]);
+  }, [tradingMode, tradeHistory]);
 
   useEffect(() => {
     if (!isRunning || data.length < 10) return;
@@ -80,7 +81,6 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, tradingMode }) => {
             setLastAutoInsight(insight);
             const latestPrice = data[data.length - 1].price;
 
-            // Execute trade only on high-confidence signals
             if ((insight.signal === TradingSignal.BUY || insight.signal === TradingSignal.SELL) && insight.confidence > 60) {
                 await executeTrade(insight.signal, latestPrice);
             }
@@ -116,15 +116,18 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, tradingMode }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 animate-fade-in">
-      <div className="lg:col-span-3 space-y-6">
-        <PriceChart data={data} />
-        <TradeHistory trades={tradeHistory} />
-      </div>
-      <div className="lg:col-span-2 space-y-6">
-        <Portfolio portfolio={portfolio} totalValue={totalPortfolioValue} />
-        <BotStatus isRunning={isRunning} onToggle={setIsRunning} isAnalyzing={isAnalyzing} />
-        <AiInsight cryptoData={data} apiKey={apiKey} lastAutoInsight={lastAutoInsight} />
+    <div className="space-y-6 animate-fade-in">
+      {tradingMode === 'live' && <LiveModeWarning />}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3 space-y-6">
+          <PriceChart data={data} />
+          <TradeHistory trades={tradeHistory} />
+        </div>
+        <div className="lg:col-span-2 space-y-6">
+          <Portfolio portfolio={portfolio} totalValue={totalPortfolioValue} />
+          <BotStatus isRunning={isRunning} onToggle={setIsRunning} isAnalyzing={isAnalyzing} />
+          <AiInsight cryptoData={data} apiKey={apiKey} lastAutoInsight={lastAutoInsight} />
+        </div>
       </div>
     </div>
   );

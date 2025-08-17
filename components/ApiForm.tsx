@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TradingMode } from '../types';
 
@@ -22,7 +23,7 @@ const ApiForm: React.FC<ApiFormProps> = ({ onConnect }) => {
   return (
     <div className="bg-gray-800 border border-cyan-400/30 rounded-xl shadow-2xl shadow-cyan-500/10 p-8 animate-fade-in">
       <h2 className="text-2xl font-bold text-center text-cyan-400 mb-2">Connect to Exchange</h2>
-      <p className="text-center text-gray-400 mb-6">Enter your API credentials to begin.</p>
+      <p className="text-center text-gray-400 mb-6">Enter your credentials to begin.</p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -67,19 +68,18 @@ const ApiForm: React.FC<ApiFormProps> = ({ onConnect }) => {
 
         {mode === 'live' ? (
              <div className="bg-red-900/50 border border-red-500/50 text-red-300 text-xs rounded-lg p-3 space-y-3">
-                <p className="font-bold text-base text-red-200">WARNING: HIGH RISK ACTIVITY</p>
+                <p className="font-bold text-base text-red-200">SECURITY WARNING: DEMONSTRATION ONLY</p>
                 <p>
-                    You have selected Live Trading. Automated trading involves substantial risk of financial loss. 
-                    Ensure your API keys have the minimum required permissions. DO NOT enable withdrawal permissions.
+                    Live Trading mode is for demonstration purposes. For your security, <span className="font-bold">NEVER enter real API keys into a frontend application.</span>
                 </p>
                 <p>
-                    You are solely responsible for any financial outcomes.
+                    This application does not execute real trades. You are responsible for any actions you take based on its analysis.
                 </p>
             </div>
         ) : (
             <div className="bg-cyan-900/50 border border-cyan-500/50 text-cyan-200 text-xs rounded-lg p-3">
                 <p className="font-bold text-base text-cyan-100">Demo Mode</p>
-                <p>You are in Demo Mode. All trades will be simulated with paper money and will not affect your real-world portfolio.</p>
+                <p>You are in Demo Mode. Your portfolio and trade history will be saved in your browser for this session.</p>
             </div>
         )}
 
@@ -96,7 +96,7 @@ const ApiForm: React.FC<ApiFormProps> = ({ onConnect }) => {
                 </div>
                 <div className="ml-3 text-sm">
                     <label htmlFor="risk-acknowledged" className="font-medium text-gray-300">
-                        I understand the risks of automated trading with real funds and accept full responsibility.
+                        I acknowledge that this is a demonstration and no real funds will be traded.
                     </label>
                 </div>
             </div>
@@ -107,7 +107,7 @@ const ApiForm: React.FC<ApiFormProps> = ({ onConnect }) => {
           disabled={mode === 'live' && !riskAcknowledged}
           className="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
         >
-          Connect Securely
+          Connect
         </button>
       </form>
     </div>
