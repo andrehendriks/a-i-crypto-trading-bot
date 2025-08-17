@@ -1,8 +1,10 @@
 import React from 'react';
+import { TradingMode } from '../types';
 
 interface HeaderProps {
   isConnected: boolean;
   onDisconnect: () => void;
+  tradingMode: TradingMode;
 }
 
 const ChipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -18,7 +20,7 @@ const ChipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 
-const Header: React.FC<HeaderProps> = ({ isConnected, onDisconnect }) => {
+const Header: React.FC<HeaderProps> = ({ isConnected, onDisconnect, tradingMode }) => {
   return (
     <header className="bg-gray-900/50 backdrop-blur-sm border-b border-cyan-400/20 p-4 flex justify-between items-center sticky top-0 z-50">
       <div className="flex items-center gap-3">
@@ -27,12 +29,21 @@ const Header: React.FC<HeaderProps> = ({ isConnected, onDisconnect }) => {
           AI CRYPTO TRADING BOT
         </h1>
         {isConnected && (
-            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500 text-red-400 text-sm font-bold px-3 py-1 rounded-full">
+            <div className={`flex items-center gap-2 text-sm font-bold px-3 py-1 rounded-full border
+              ${tradingMode === 'live' 
+                ? 'bg-red-500/20 border-red-500 text-red-400' 
+                : 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+              }`}
+            >
                 <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 
+                      ${tradingMode === 'live' ? 'bg-red-400' : 'bg-cyan-400'}`
+                    }></span>
+                    <span className={`relative inline-flex rounded-full h-3 w-3 
+                      ${tradingMode === 'live' ? 'bg-red-500' : 'bg-cyan-500'}`
+                    }></span>
                 </span>
-                LIVE
+                {tradingMode.toUpperCase()}
             </div>
         )}
       </div>

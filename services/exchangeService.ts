@@ -1,4 +1,4 @@
-import { Portfolio, TradingSignal } from '../types';
+import { Portfolio, TradingSignal, TradingMode } from '../types';
 
 /**
  * NOTE: This is a placeholder service. In a real application, you would
@@ -13,12 +13,20 @@ import { Portfolio, TradingSignal } from '../types';
  * Fetches the current portfolio balance from the exchange.
  * @param apiKey - The user's API key.
  * @param apiSecret - The user's API secret.
+ * @param mode - The current trading mode ('demo' or 'live').
  * @returns A promise that resolves to the user's portfolio.
  */
-export const getPortfolioBalance = async (apiKey: string, apiSecret: string): Promise<Portfolio> => {
-  console.log('SIMULATING: Fetching portfolio balance with API Key:', apiKey);
+export const getPortfolioBalance = async (apiKey: string, apiSecret: string, mode: TradingMode): Promise<Portfolio> => {
+  console.log(`SIMULATING: Fetching portfolio balance for ${mode.toUpperCase()} mode with API Key:`, apiKey);
   // In a real app, you would make an API call to the exchange here.
-  // For this example, we return a hardcoded starting portfolio.
+  // For this example, we return a hardcoded starting portfolio based on the mode.
+  if (mode === 'demo') {
+    return Promise.resolve({
+        eur: 100000.00,
+        btc: 1.0,
+    });
+  }
+  // Live mode
   return Promise.resolve({
     eur: 10000.00,
     btc: 0.5,
@@ -31,11 +39,12 @@ export const getPortfolioBalance = async (apiKey: string, apiSecret: string): Pr
  * @param apiSecret - The user's API secret.
  * @param amountEur - The amount in EUR to spend.
  * @param price - The current price of BTC.
- * @returns A promise that resolves to the trade result (e.g., transaction ID).
+ * @param mode - The current trading mode ('demo' or 'live').
+ * @returns A promise that resolves to the trade result.
  */
-export const placeBuyOrder = async (apiKey: string, apiSecret: string, amountEur: number, price: number): Promise<{ success: boolean; btcAmount: number; }> => {
+export const placeBuyOrder = async (apiKey: string, apiSecret: string, amountEur: number, price: number, mode: TradingMode): Promise<{ success: boolean; btcAmount: number; }> => {
   const btcAmount = amountEur / price;
-  console.log(`%cSIMULATING: Placing MARKET BUY order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #22c55e');
+  console.log(`%c[${mode.toUpperCase()}-SIMULATED]: Placing MARKET BUY order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #22c55e');
   // In a real app, you'd place the order here.
   // We'll simulate a successful order placement.
   return Promise.resolve({ success: true, btcAmount });
@@ -47,11 +56,12 @@ export const placeBuyOrder = async (apiKey: string, apiSecret: string, amountEur
  * @param apiSecret - The user's API secret.
  * @param amountEur - The amount in EUR to sell.
  * @param price - The current price of BTC.
- * @returns A promise that resolves to the trade result (e.g., transaction ID).
+ * @param mode - The current trading mode ('demo' or 'live').
+ * @returns A promise that resolves to the trade result.
  */
-export const placeSellOrder = async (apiKey: string, apiSecret: string, amountEur: number, price: number): Promise<{ success: boolean; btcAmount: number; }> => {
+export const placeSellOrder = async (apiKey: string, apiSecret: string, amountEur: number, price: number, mode: TradingMode): Promise<{ success: boolean; btcAmount: number; }> => {
   const btcAmount = amountEur / price;
-  console.log(`%cSIMULATING: Placing MARKET SELL order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #ef4444');
+  console.log(`%c[${mode.toUpperCase()}-SIMULATED]: Placing MARKET SELL order for ${btcAmount.toFixed(6)} BTC (€${amountEur})`, 'color: #ef4444');
   // In a real app, you'd place the order here.
   // We'll simulate a successful order placement.
   return Promise.resolve({ success: true, btcAmount });

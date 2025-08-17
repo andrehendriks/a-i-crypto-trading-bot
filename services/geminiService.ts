@@ -13,16 +13,18 @@ export const getTradingInsight = async (
 
   const recentPrices = priceData.slice(-20).map(p => p.price);
   const prompt = `
-    You are a crypto trading analyst bot. Your task is to analyze the following recent price data for BTC/EUR and provide a short-term trading signal.
+    You are an expert crypto trading bot specializing in a trend-following strategy. Your goal is to identify the dominant short-term trend from recent BTC/EUR price data and generate a trading signal that aligns with that trend.
+
     Price Data (most recent price is last): ${recentPrices.join(', ')}
 
-    Analyze the data considering the following:
-    1.  **Trend & Momentum:** Is there a clear upward, downward, or sideways trend? Is the momentum accelerating or decelerating?
-    2.  **Volatility:** Are the price swings large or small?
-    3.  **Key Levels:** Does the price appear to be reacting to a support or resistance level within this short timeframe?
-
-    Based on your analysis, decide the most logical trading action: BUY, SELL, or HOLD.
-    Provide a concise reasoning for your decision (max 25 words) and a confidence score (0-100) reflecting your certainty.
+    Follow these steps for your analysis:
+    1.  **Identify the Primary Trend:** First, determine if the market is in an UPTREND, DOWNTREND, or is CONSOLIDATING (sideways).
+    2.  **Generate a Signal:**
+        - If in a clear UPTREND, your primary signals should be BUY or HOLD. Only signal SELL if you see a very strong reversal pattern.
+        - If in a clear DOWNTREND, your primary signals should be SELL or HOLD. Only signal BUY if you see a very strong bottoming pattern.
+        - If CONSOLIDATING, prefer HOLD, but you can issue a BUY or SELL signal if the price breaks out of the consolidation range.
+    3.  **Provide Reasoning:** Briefly explain the trend you've identified and why it justifies your signal (max 25 words).
+    4.  **Confidence Score:** Provide a confidence score (0-100) reflecting the clarity and strength of the identified trend.
   `;
 
   try {
@@ -41,16 +43,16 @@ export const getTradingInsight = async (
             },
             reasoning: {
               type: Type.STRING,
-              description: 'A brief explanation for the trading signal based on momentum, volatility, or key levels.'
+              description: 'A brief explanation for the trading signal based on the identified trend.'
             },
             confidence: {
               type: Type.NUMBER,
-              description: 'A confidence score from 0 to 100 for this prediction.'
+              description: 'A confidence score from 0 to 100 for this prediction, based on trend strength.'
             }
           },
           required: ['signal', 'reasoning', 'confidence']
         },
-        temperature: 0.6, // Slightly higher for more nuanced analysis
+        temperature: 0.5,
       }
     });
 

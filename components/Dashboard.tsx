@@ -5,18 +5,19 @@ import BotStatus from './BotStatus';
 import Portfolio from './Portfolio';
 import TradeHistory from './TradeHistory';
 import useCryptoData from '../hooks/useCryptoData';
-import { Portfolio as PortfolioType, Trade, AiInsight as AiInsightType, TradingSignal } from '../types';
+import { Portfolio as PortfolioType, Trade, AiInsight as AiInsightType, TradingSignal, TradingMode } from '../types';
 import { getTradingInsight } from '../services/geminiService';
 import { getPortfolioBalance, placeBuyOrder, placeSellOrder } from '../services/exchangeService';
 
 interface DashboardProps {
     apiKey: string;
+    tradingMode: TradingMode;
 }
 
 const ANALYSIS_INTERVAL = 15000; // 15 seconds
 const TRADE_AMOUNT_EUR = 500; // Trade a fixed €500 value per transaction
 
-const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
+const Dashboard: React.FC<DashboardProps> = ({ apiKey, tradingMode }) => {
   const { data, error: dataError } = useCryptoData();
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [portfolio, setPortfolio] = useState<PortfolioType>({ eur: 0, btc: 0 });
@@ -28,24 +29,24 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
   useEffect(() => {
     const fetchBalance = async () => {
         // In a real app, you would pass apiSecret securely, likely from a backend
-        const initialPortfolio = await getPortfolioBalance(apiKey, 'dummy-secret');
+        const initialPortfolio = await getPortfolioBalance(apiKey, 'dummy-secret', tradingMode);
         setPortfolio(initialPortfolio);
     };
     fetchBalance();
-  }, [apiKey]);
+  }, [apiKey, tradingMode]);
 
   const executeTrade = useCallback(async (signal: TradingSignal.BUY | TradingSignal.SELL, price: number) => {
     let tradeResult: { success: boolean; btcAmount: number; } | null = null;
     
     if (signal === TradingSignal.BUY && portfolio.eur >= TRADE_AMOUNT_EUR) {
-        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price);
+        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price, tradingMode);
         if(tradeResult.success) {
             setPortfolio(p => ({ eur: p.eur - TRADE_AMOUNT_EUR, btc: p.btc + tradeResult.btcAmount }));
         }
     } else if (signal === TradingSignal.SELL) {
         const btcToSell = TRADE_AMOUNT_EUR / price;
         if (portfolio.btc >= btcToSell) {
-            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price);
+            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price, tradingMode);
             if(tradeResult.success) {
                 setPortfolio(p => ({ eur: p.eur + TRADE_AMOUNT_EUR, btc: p.btc - tradeResult.btcAmount }));
             }
@@ -66,7 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
         ].slice(0, 50)); // Keep history to 50 trades
     }
 
-  }, [apiKey, portfolio]);
+  }, [apiKey, portfolio, tradingMode]);
 
   useEffect(() => {
     if (!isRunning || data.length < 10) return;

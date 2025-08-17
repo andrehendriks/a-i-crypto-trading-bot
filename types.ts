@@ -27,3 +27,5 @@ export interface Portfolio {
   eur: number;
   btc: number;
 }
+
+export type TradingMode = 'demo' | 'live';
