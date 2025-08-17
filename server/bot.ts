@@ -1,6 +1,7 @@
 import { getTradingInsight } from '../services/geminiService';
 import { getPortfolioBalance, placeBuyOrder, placeSellOrder, loadTradeHistory, saveTradeHistory } from '../services/exchangeService';
 import { AiInsight, BotStatus, CryptoDataPoint, Portfolio, Trade, TradingSignal } from '../types';
+import { fetchLatestPrice } from '../services/marketDataService';
 
 const ANALYSIS_INTERVAL = 15000; // 15 seconds
 const TRADE_AMOUNT_EUR = 500; // Trade a fixed €500 value per transaction
@@ -74,14 +75,12 @@ class TradingBot {
         console.log("[Bot] Starting new analysis cycle...");
 
         try {
-            // 1. Fetch latest price data (in a real backend, you'd have a persistent data feed)
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur');
-            const result = await response.json();
-            const latestPrice = result.bitcoin?.eur;
-            if (typeof latestPrice !== 'number') throw new Error("Invalid price data");
-
+            // 1. Fetch latest price data using the centralized service
+            const latestPricePoint = await fetchLatestPrice();
+            const latestPrice = latestPricePoint.price;
+            
             // A real bot would use a proper historical data series.
-            const mockPriceData: CryptoDataPoint[] = [{ time: new Date().toLocaleTimeString(), price: latestPrice }];
+            const mockPriceData: CryptoDataPoint[] = [latestPricePoint];
 
             // 2. Get AI insight
             const insight = await getTradingInsight(mockPriceData, GEMINI_API_KEY);

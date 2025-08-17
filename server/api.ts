@@ -1,5 +1,6 @@
 import { tradingBot } from './bot';
-import { AiInsight, BotStatus, Portfolio, Trade } from '../types';
+import { AiInsight, BotStatus, Portfolio, Trade, CryptoDataPoint } from '../types';
+import { fetchLatestPrice } from '../services/marketDataService';
 
 /**
  * This file simulates the API layer of a backend server. The frontend calls
@@ -31,4 +32,11 @@ export const getTradeHistory = async (): Promise<Trade[]> => {
 
 export const getLatestInsight = async (): Promise<AiInsight | null> => {
     return tradingBot.getLatestInsight();
+};
+
+/**
+ * API endpoint for the frontend to get the latest price.
+ */
+export const getLatestPrice = async (): Promise<CryptoDataPoint> => {
+    return fetchLatestPrice();
 };

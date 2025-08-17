@@ -12,8 +12,8 @@ import ccxt from 'ccxt';
 // --- Configuration ---
 // In a real backend, these would be loaded from environment variables or a secret manager.
 // e.g., const apiKey = process.env.EXCHANGE_API_KEY;
-const apiKey = 'YOUR_API_KEY_HERE'; // <-- REPLACE on your server
-const secret = 'YOUR_SECRET_KEY_HERE'; // <-- REPLACE on your server
+const apiKey = 'cb02568b-126f-4204-b52c-51b390f7b4dd'; // <-- REPLACE on your server
+const secret = '655DC0F12C463F23C8A5C0C384C8DE1B'; // <-- REPLACE on your server
 const exchangeId = 'binance'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
 const symbol = 'BTC/EUR';
 // --- End Configuration ---
