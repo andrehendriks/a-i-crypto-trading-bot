@@ -1,0 +1,5 @@
+{
+  "name": "AI Crypto Trading Bot",
+  "description": "A sophisticated dashboard for monitoring cryptocurrency prices and generating trading insights using AI. Users can connect their exchange via an API form to receive personalized trading analysis.",
+  "requestFramePermissions": []
+}
