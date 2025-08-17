@@ -26,7 +26,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ portfolio, totalValue }) => {
             <div className="flex justify-between items-baseline">
                 <span className="text-gray-400">Total Value</span>
                 <span className="text-2xl font-bold font-roboto-mono text-cyan-400">
-                    ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    €{totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-1.5 mt-1">
@@ -36,9 +36,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ portfolio, totalValue }) => {
         <div className="border-t border-gray-700 my-2"></div>
         <div>
             <div className="flex justify-between items-baseline">
-                <span className="text-gray-300">USD Balance</span>
+                <span className="text-gray-300">EUR Balance</span>
                 <span className="font-roboto-mono text-lg">
-                    ${portfolio.usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    €{portfolio.eur.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
             </div>
         </div>

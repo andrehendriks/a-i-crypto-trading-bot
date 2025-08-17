@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CryptoDataPoint } from '../types';
 
-const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
+const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur';
 const MAX_DATA_POINTS = 50;
 const FETCH_INTERVAL = 15000; // 15 seconds
 
@@ -16,7 +16,7 @@ const useCryptoData = () => {
         throw new Error(`Failed to fetch price: ${response.statusText}`);
       }
       const result = await response.json();
-      const price = result.bitcoin?.usd;
+      const price = result.bitcoin?.eur;
       
       if (typeof price !== 'number') {
         throw new Error('Invalid price data received from API.');

@@ -24,6 +24,6 @@ export interface Trade {
 }
 
 export interface Portfolio {
-  usd: number;
+  eur: number;
   btc: number;
 }

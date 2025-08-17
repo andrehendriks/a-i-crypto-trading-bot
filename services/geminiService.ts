@@ -13,7 +13,7 @@ export const getTradingInsight = async (
 
   const recentPrices = priceData.slice(-20).map(p => p.price);
   const prompt = `
-    You are a crypto trading analyst bot. Your task is to analyze the following recent price data for BTC/USD and provide a short-term trading signal.
+    You are a crypto trading analyst bot. Your task is to analyze the following recent price data for BTC/EUR and provide a short-term trading signal.
     Price Data (most recent price is last): ${recentPrices.join(', ')}
 
     Analyze the data considering the following:

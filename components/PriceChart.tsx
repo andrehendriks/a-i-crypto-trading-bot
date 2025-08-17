@@ -17,11 +17,11 @@ const PriceChart: React.FC<PriceChartProps> = ({ data }) => {
     <div className="bg-gray-800/50 border border-cyan-400/20 rounded-xl p-4 md:p-6 shadow-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
         <div>
-            <h3 className="text-xl font-bold text-gray-100">BTC/USD Live Chart</h3>
+            <h3 className="text-xl font-bold text-gray-100">BTC/EUR Live Chart</h3>
             <p className="text-gray-400">Real-time simulated price feed</p>
         </div>
         <div className="text-right mt-2 sm:mt-0">
-            <p className="text-3xl font-bold font-roboto-mono">${latestPrice.toLocaleString()}</p>
+            <p className="text-3xl font-bold font-roboto-mono">€{latestPrice.toLocaleString()}</p>
             <p className={`font-semibold font-roboto-mono ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
                 {isPositive ? '+' : ''}{priceChange.toFixed(2)} ({percentageChange.toFixed(2)}%)
             </p>
@@ -42,7 +42,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ data }) => {
                 domain={['dataMin - 100', 'dataMax + 100']} 
                 stroke="#9ca3af" 
                 tick={{ fontSize: 12 }} 
-                tickFormatter={(value) => `$${Number(value).toLocaleString()}`} 
+                tickFormatter={(value) => `€${Number(value).toLocaleString()}`} 
             />
             <Tooltip
               contentStyle={{
@@ -52,7 +52,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ data }) => {
                 borderRadius: '0.5rem'
               }}
               labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
-              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Price']}
+              formatter={(value: number) => [`€${value.toLocaleString()}`, 'Price']}
             />
             <Area
               type="monotone"

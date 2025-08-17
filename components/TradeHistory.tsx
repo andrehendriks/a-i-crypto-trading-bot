@@ -33,7 +33,7 @@ const TradeHistory: React.FC<TradeHistoryProps> = ({ trades }) => {
                  </span>
                  <div className="font-roboto-mono">
                     <p className="text-gray-100">{trade.amountBtc.toFixed(6)} BTC</p>
-                    <p className="text-gray-400">@ ${trade.price.toLocaleString()}</p>
+                    <p className="text-gray-400">@ €{trade.price.toLocaleString()}</p>
                  </div>
               </div>
               <span className="text-gray-500 font-roboto-mono">{trade.time}</span>

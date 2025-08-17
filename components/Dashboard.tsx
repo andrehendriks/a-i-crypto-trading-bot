@@ -14,12 +14,12 @@ interface DashboardProps {
 }
 
 const ANALYSIS_INTERVAL = 15000; // 15 seconds
-const TRADE_AMOUNT_USD = 500; // Trade a fixed $500 value per transaction
+const TRADE_AMOUNT_EUR = 500; // Trade a fixed €500 value per transaction
 
 const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
   const { data, error: dataError } = useCryptoData();
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [portfolio, setPortfolio] = useState<PortfolioType>({ usd: 0, btc: 0 });
+  const [portfolio, setPortfolio] = useState<PortfolioType>({ eur: 0, btc: 0 });
   const [tradeHistory, setTradeHistory] = useState<Trade[]>([]);
   const [lastAutoInsight, setLastAutoInsight] = useState<AiInsightType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -37,17 +37,17 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
   const executeTrade = useCallback(async (signal: TradingSignal.BUY | TradingSignal.SELL, price: number) => {
     let tradeResult: { success: boolean; btcAmount: number; } | null = null;
     
-    if (signal === TradingSignal.BUY && portfolio.usd >= TRADE_AMOUNT_USD) {
-        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_USD, price);
+    if (signal === TradingSignal.BUY && portfolio.eur >= TRADE_AMOUNT_EUR) {
+        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price);
         if(tradeResult.success) {
-            setPortfolio(p => ({ usd: p.usd - TRADE_AMOUNT_USD, btc: p.btc + tradeResult.btcAmount }));
+            setPortfolio(p => ({ eur: p.eur - TRADE_AMOUNT_EUR, btc: p.btc + tradeResult.btcAmount }));
         }
     } else if (signal === TradingSignal.SELL) {
-        const btcToSell = TRADE_AMOUNT_USD / price;
+        const btcToSell = TRADE_AMOUNT_EUR / price;
         if (portfolio.btc >= btcToSell) {
-            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_USD, price);
+            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_EUR, price);
             if(tradeResult.success) {
-                setPortfolio(p => ({ usd: p.usd + TRADE_AMOUNT_USD, btc: p.btc - tradeResult.btcAmount }));
+                setPortfolio(p => ({ eur: p.eur + TRADE_AMOUNT_EUR, btc: p.btc - tradeResult.btcAmount }));
             }
         }
     }
@@ -102,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
   }, [isRunning, data, apiKey, executeTrade, isAnalyzing]);
 
   const latestPrice = data.length > 0 ? data[data.length - 1].price : 0;
-  const totalPortfolioValue = portfolio.usd + (portfolio.btc * latestPrice);
+  const totalPortfolioValue = portfolio.eur + (portfolio.btc * latestPrice);
 
   if (dataError) {
     return (
