@@ -1,5 +1,5 @@
 import { Portfolio, Trade } from '../types';
-import ccxt from 'ccxt';
+import * as ccxt from 'ccxt';
 
 // ##################################################################
 // #  CRITICAL SECURITY WARNING                                     #
@@ -14,11 +14,17 @@ import ccxt from 'ccxt';
 // e.g., const apiKey = process.env.EXCHANGE_API_KEY;
 const apiKey = 'cb02568b-126f-4204-b52c-51b390f7b4dd'; // <-- REPLACE on your server
 const secret = '655DC0F12C463F23C8A5C0C384C8DE1B'; // <-- REPLACE on your server
-const exchangeId = 'OKX'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
+const exchangeId = 'okx'; // <-- e.g., 'binance', 'coinbasepro', 'kraken'
 const symbol = 'BTC/EUR';
 // --- End Configuration ---
 
-const exchange = new (ccxt as any)[exchangeId]({
+const exchangeConstructor = ((ccxt as any).default || ccxt)[exchangeId];
+
+if (!exchangeConstructor) {
+    throw new Error(`Exchange '${exchangeId}' not found. Please ensure you are using a valid CCXT exchange ID.`);
+}
+
+const exchange = new exchangeConstructor({
     apiKey: apiKey,
     secret: secret,
     // Enable sandbox mode if the exchange supports it, for safe testing.
