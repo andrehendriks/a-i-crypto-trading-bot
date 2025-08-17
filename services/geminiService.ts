@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { CryptoDataPoint, AiInsight, TradingSignal } from '../types';
 
@@ -12,11 +11,18 @@ export const getTradingInsight = async (
   
   const ai = new GoogleGenAI({ apiKey });
 
-  const recentPrices = priceData.slice(-10).map(p => p.price);
+  const recentPrices = priceData.slice(-20).map(p => p.price);
   const prompt = `
-    Analyze the following recent cryptocurrency price data points (in USD) for a short-term trade: ${recentPrices.join(', ')}.
-    Based on this trend, what is the most logical trading action: BUY, SELL, or HOLD?
-    Provide a brief reasoning for your decision (max 30 words) and a confidence score between 0 and 100.
+    You are a crypto trading analyst bot. Your task is to analyze the following recent price data for BTC/USD and provide a short-term trading signal.
+    Price Data (most recent price is last): ${recentPrices.join(', ')}
+
+    Analyze the data considering the following:
+    1.  **Trend & Momentum:** Is there a clear upward, downward, or sideways trend? Is the momentum accelerating or decelerating?
+    2.  **Volatility:** Are the price swings large or small?
+    3.  **Key Levels:** Does the price appear to be reacting to a support or resistance level within this short timeframe?
+
+    Based on your analysis, decide the most logical trading action: BUY, SELL, or HOLD.
+    Provide a concise reasoning for your decision (max 25 words) and a confidence score (0-100) reflecting your certainty.
   `;
 
   try {
@@ -35,7 +41,7 @@ export const getTradingInsight = async (
             },
             reasoning: {
               type: Type.STRING,
-              description: 'A brief explanation for the trading signal.'
+              description: 'A brief explanation for the trading signal based on momentum, volatility, or key levels.'
             },
             confidence: {
               type: Type.NUMBER,
@@ -44,7 +50,7 @@ export const getTradingInsight = async (
           },
           required: ['signal', 'reasoning', 'confidence']
         },
-        temperature: 0.5,
+        temperature: 0.6, // Slightly higher for more nuanced analysis
       }
     });
 

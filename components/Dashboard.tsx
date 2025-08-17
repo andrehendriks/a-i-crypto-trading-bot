@@ -7,54 +7,66 @@ import TradeHistory from './TradeHistory';
 import useCryptoData from '../hooks/useCryptoData';
 import { Portfolio as PortfolioType, Trade, AiInsight as AiInsightType, TradingSignal } from '../types';
 import { getTradingInsight } from '../services/geminiService';
+import { getPortfolioBalance, placeBuyOrder, placeSellOrder } from '../services/exchangeService';
 
 interface DashboardProps {
     apiKey: string;
 }
 
 const ANALYSIS_INTERVAL = 15000; // 15 seconds
+const TRADE_AMOUNT_USD = 500; // Trade a fixed $500 value per transaction
 
 const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
-  const { data } = useCryptoData(45000, 100, 2000); // Start price, volatility, interval
+  const { data, error: dataError } = useCryptoData();
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [portfolio, setPortfolio] = useState<PortfolioType>({ usd: 10000, btc: 0.5 });
+  const [portfolio, setPortfolio] = useState<PortfolioType>({ usd: 0, btc: 0 });
   const [tradeHistory, setTradeHistory] = useState<Trade[]>([]);
   const [lastAutoInsight, setLastAutoInsight] = useState<AiInsightType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
-  const executeTrade = useCallback((signal: TradingSignal.BUY | TradingSignal.SELL, price: number) => {
-    const tradeAmountUsd = 500; // Trade a fixed $500 value
+  // Fetch initial portfolio balance when component mounts
+  useEffect(() => {
+    const fetchBalance = async () => {
+        // In a real app, you would pass apiSecret securely, likely from a backend
+        const initialPortfolio = await getPortfolioBalance(apiKey, 'dummy-secret');
+        setPortfolio(initialPortfolio);
+    };
+    fetchBalance();
+  }, [apiKey]);
+
+  const executeTrade = useCallback(async (signal: TradingSignal.BUY | TradingSignal.SELL, price: number) => {
+    let tradeResult: { success: boolean; btcAmount: number; } | null = null;
     
-    setPortfolio(prev => {
-        let newPortfolio = {...prev};
-        if (signal === TradingSignal.BUY && prev.usd >= tradeAmountUsd) {
-            const btcAmount = tradeAmountUsd / price;
-            newPortfolio = { usd: prev.usd - tradeAmountUsd, btc: prev.btc + btcAmount };
-        } else if (signal === TradingSignal.SELL) {
-            const btcToSell = tradeAmountUsd / price;
-            if (prev.btc >= btcToSell) {
-                newPortfolio = { usd: prev.usd + tradeAmountUsd, btc: prev.btc - btcToSell };
-            }
-        } else {
-          return prev; // Not enough funds, do nothing
+    if (signal === TradingSignal.BUY && portfolio.usd >= TRADE_AMOUNT_USD) {
+        tradeResult = await placeBuyOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_USD, price);
+        if(tradeResult.success) {
+            setPortfolio(p => ({ usd: p.usd - TRADE_AMOUNT_USD, btc: p.btc + tradeResult.btcAmount }));
         }
-        
-        // Add trade to history only if portfolio changed
+    } else if (signal === TradingSignal.SELL) {
+        const btcToSell = TRADE_AMOUNT_USD / price;
+        if (portfolio.btc >= btcToSell) {
+            tradeResult = await placeSellOrder(apiKey, 'dummy-secret', TRADE_AMOUNT_USD, price);
+            if(tradeResult.success) {
+                setPortfolio(p => ({ usd: p.usd + TRADE_AMOUNT_USD, btc: p.btc - tradeResult.btcAmount }));
+            }
+        }
+    }
+
+    if (tradeResult?.success) {
+         // Add trade to history
         setTradeHistory(prevHistory => [
           { 
             id: new Date().toISOString(), 
             type: signal, 
             price, 
-            amountBtc: tradeAmountUsd / price,
+            amountBtc: tradeResult.btcAmount,
             time: new Date().toLocaleTimeString() 
           },
           ...prevHistory
         ].slice(0, 50)); // Keep history to 50 trades
+    }
 
-        return newPortfolio;
-    });
-
-  }, []);
+  }, [apiKey, portfolio]);
 
   useEffect(() => {
     if (!isRunning || data.length < 10) return;
@@ -69,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
 
             // Execute trade only on high-confidence signals
             if ((insight.signal === TradingSignal.BUY || insight.signal === TradingSignal.SELL) && insight.confidence > 60) {
-                executeTrade(insight.signal, latestPrice);
+                await executeTrade(insight.signal, latestPrice);
             }
         } catch (e) {
             console.error("Auto-analysis failed", e);
@@ -83,7 +95,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
         }
     };
     
-    performAnalysis(); // Run once immediately when enabled
+    performAnalysis(); 
     const intervalId = setInterval(performAnalysis, ANALYSIS_INTERVAL);
 
     return () => clearInterval(intervalId);
@@ -91,6 +103,16 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey }) => {
 
   const latestPrice = data.length > 0 ? data[data.length - 1].price : 0;
   const totalPortfolioValue = portfolio.usd + (portfolio.btc * latestPrice);
+
+  if (dataError) {
+    return (
+        <div className="text-center text-red-400 bg-red-900/50 p-6 rounded-lg">
+            <h2 className="text-2xl font-bold">Failed to load price data</h2>
+            <p>{dataError}</p>
+            <p className="mt-4">Please check your internet connection or try again later. The price feed API might be temporarily unavailable.</p>
+        </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 animate-fade-in">

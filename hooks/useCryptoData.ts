@@ -1,50 +1,64 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { CryptoDataPoint } from '../types';
 
-const useCryptoData = (initialPrice: number, volatility: number, interval: number) => {
+const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
+const MAX_DATA_POINTS = 50;
+const FETCH_INTERVAL = 15000; // 15 seconds
+
+const useCryptoData = () => {
   const [data, setData] = useState<CryptoDataPoint[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const generateInitialData = useCallback(() => {
-    const now = new Date();
-    let price = initialPrice;
-    const initialData: CryptoDataPoint[] = [];
-    for (let i = 50; i > 0; i--) {
-        price += (Math.random() - 0.5) * volatility * 2;
-        price = Math.max(price, initialPrice - volatility * 10); // Prevent drastic drops
-        const time = new Date(now.getTime() - i * interval);
-        initialData.push({
-            time: time.toLocaleTimeString(),
-            price: parseFloat(price.toFixed(2)),
-        });
-    }
-    setData(initialData);
-  }, [initialPrice, volatility, interval]);
+  const fetchPrice = useCallback(async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch price: ${response.statusText}`);
+      }
+      const result = await response.json();
+      const price = result.bitcoin?.usd;
+      
+      if (typeof price !== 'number') {
+        throw new Error('Invalid price data received from API.');
+      }
 
-  const addDataPoint = useCallback(() => {
-    setData(prevData => {
-      const lastPoint = prevData[prevData.length - 1];
-      const newPrice = lastPoint.price + (Math.random() - 0.5) * volatility;
       const newPoint: CryptoDataPoint = {
         time: new Date().toLocaleTimeString(),
-        price: parseFloat(Math.max(newPrice, 0).toFixed(2)),
+        price: parseFloat(price.toFixed(2)),
       };
-      const newData = [...prevData, newPoint];
-      if (newData.length > 50) {
-        return newData.slice(newData.length - 50);
+      
+      setData(prevData => {
+        const newData = [...prevData, newPoint];
+        return newData.slice(-MAX_DATA_POINTS);
+      });
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching crypto data:", err);
+      if (err instanceof Error) {
+          setError(err.message);
+      } else {
+          setError("An unknown error occurred.");
       }
-      return newData;
-    });
-  }, [volatility]);
+    }
+  }, []);
+  
+  // Initial data fetch
+  useEffect(() => {
+    const fetchInitialData = async () => {
+        // For the chart to look nice on load, we pre-fill with one point.
+        // A full historical fetch could be implemented here.
+        await fetchPrice();
+    };
+    fetchInitialData();
+  }, [fetchPrice]);
+
 
   useEffect(() => {
-    generateInitialData();
-    const dataInterval = setInterval(addDataPoint, interval);
-    return () => clearInterval(dataInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generateInitialData, addDataPoint, interval]);
+    const intervalId = setInterval(fetchPrice, FETCH_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [fetchPrice]);
 
-  return { data, addDataPoint };
+  return { data, error };
 };
 
 export default useCryptoData;
