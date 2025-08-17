@@ -1,4 +1,3 @@
-
 export interface CryptoDataPoint {
   time: string;
   price: number;
@@ -14,4 +13,17 @@ export interface AiInsight {
   signal: TradingSignal;
   reasoning: string;
   confidence: number;
+}
+
+export interface Trade {
+  id: string;
+  type: TradingSignal.BUY | TradingSignal.SELL;
+  price: number;
+  amountBtc: number;
+  time: string;
+}
+
+export interface Portfolio {
+  usd: number;
+  btc: number;
 }

@@ -57,7 +57,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ data }) => {
             <Area
               type="monotone"
               dataKey="price"
-              stroke={false}
+              stroke="none"
               fillOpacity={1}
               fill="url(#priceGradient)"
               isAnimationActive={false}
